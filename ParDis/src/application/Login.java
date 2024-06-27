@@ -20,8 +20,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import at.favre.lib.crypto.bcrypt.BCrypt;
+
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 public class Login extends Application {
 
@@ -79,25 +86,42 @@ public class Login extends Application {
         eyeImageView2.setFitWidth(24);
         eyeImageView2.setPreserveRatio(true);
 
+        Text passText = new Text();
+        passText.setVisible(false); // Initially invisible
+        passText.getStyleClass().add("toggle-password"); // Add CSS styling if needed
+        
+        StackPane passPane = new StackPane(passInput, passText, eyeImageView);
+        passPane.setAlignment(Pos.CENTER_LEFT);
+        passPane.getStyleClass().add("password-field");
+        GridPane.setConstraints(passPane, 0, 8);
+        
         // HBox to contain PasswordField and ImageView
-        HBox passBox = new HBox(passInput, eyeImageView);
+        HBox passBox = new HBox(passPane, eyeImageView); // Include passText in the HBox
         passBox.setAlignment(Pos.CENTER_LEFT);
         passBox.getStyleClass().add("password-field-container");
         GridPane.setConstraints(passBox, 0, 8);
 
-        // Toggle password visibility -- Not done
+ 
+        
         eyeImageView.setOnMousePressed(event -> {
-            passInput.setVisible(!passInput.isVisible());
             if (passInput.isVisible()) {
-                eyeImageView.setImage(new Image("Blind.png"));
-            } else {
+                // Password field is visible, switch to text display
+                passText.setText(passInput.getText());
+                passText.setVisible(true);
+                passInput.setVisible(false);
                 eyeImageView.setImage(new Image("Eye.png"));
+            } else {
+                // Text display is visible, switch to password field
+                passInput.setText(passText.getText());
+                passInput.setVisible(true);
+                passText.setVisible(false);
+                eyeImageView.setImage(new Image("Blind.png"));
             }
         });
 
         Button loginButton = new Button("LOG-IN");
         loginButton.setPrefWidth(250);
-        
+
         HBox hboxlog = new HBox(loginButton);
         hboxlog.setAlignment(Pos.CENTER);
         GridPane.setConstraints(hboxlog, 0, 14);
@@ -105,66 +129,21 @@ public class Login extends Application {
 
         // Database connection and login logic
         loginButton.setOnAction(e -> {
-            String name = nameInput.getText();
-            String passwordValue = passInput.getText();
+            login(nameInput, passInput, nameLabel, passLabel, passBox, url, username, password);
+        });
 
-            boolean valid = true;
-
-            if (name.isEmpty()) {
-                nameInput.setStyle("-fx-border-color: red;");
-                nameLabel.setStyle("-fx-text-fill: red;");
-                shake(nameInput);
-                valid = false;
+        // Enter key triggers login
+        passInput.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                login(nameInput, passInput, nameLabel, passLabel, passBox, url, username, password);
             }
-
-            else if (passwordValue.isEmpty()) {
-                passBox.setStyle("-fx-border-color: red;");
-                passLabel.setStyle("-fx-text-fill: red;");
-                shake(passInput);
-                valid = false;
+        });
+        
+        nameInput.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                login(nameInput, passInput, nameLabel, passLabel, passBox, url, username, password);
             }
-
-            if (valid) {
-                try {
-                    Connection connection = DriverManager.getConnection(url, username, password);
-                    String sql = "SELECT * FROM `create` WHERE name = ?";
-                    PreparedStatement statement = connection.prepareStatement(sql);
-                    statement.setString(1, name);
-
-                    ResultSet resultSet = statement.executeQuery();
-
-                    if (resultSet.next()) {
-                        // Username exists, now check password
-                        String storedPassword = resultSet.getString("password");
-                        if (passwordValue.equals(storedPassword)) {
-                            System.out.println("Login successful!");
-                            try {
-                                window.close();
-                                Stage catStage = new Stage();
-                                new Categories().start(catStage);
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        } else {
-                            passBox.setStyle("-fx-border-color: red;");
-                            passLabel.setStyle("-fx-text-fill: red;");
-                            shake(passInput);
-                            valid = false;
-                        }
-                    } else {
-                        nameInput.setStyle("-fx-border-color: red;");
-                        nameLabel.setStyle("-fx-text-fill: red;");
-                        shake(nameInput);
-                        valid = false;
-                    }
-
-                    resultSet.close();
-                    statement.close();
-                    connection.close();
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                }
-            }
+            
         });
 
         // Sign-up Link
@@ -211,12 +190,77 @@ public class Login extends Application {
                 passBox.getStyleClass().remove("password-field-container-active");
             }
         });
-        
+
         // Scene and CSS
         Scene scene = new Scene(grid, 960, 520);
         scene.getStylesheets().add("loginStyle.css");
         window.setScene(scene);
         window.show();
+    }
+
+    private void login(TextField nameInput, PasswordField passInput, Label nameLabel, Label passLabel, HBox passBox, String url, String username, String password) {
+        String name = nameInput.getText();
+        String passwordValue = passInput.getText();
+
+        boolean valid = true;
+
+        if (name.isEmpty()) {
+            nameInput.setStyle("-fx-border-color: red;");
+            nameLabel.setStyle("-fx-text-fill: red;");
+            shake(nameInput);
+            valid = false;
+        } else if (passwordValue.isEmpty()) {
+            passBox.setStyle("-fx-border-color: red;");
+            passLabel.setStyle("-fx-text-fill: red;");
+            shake(passInput);
+            valid = false;
+        }
+
+        if (valid) {
+            try {
+                Connection connection = DriverManager.getConnection(url, username, password);
+                String sql = "SELECT * FROM `create` WHERE name = ?";
+                PreparedStatement statement = connection.prepareStatement(sql);
+                statement.setString(1, name);
+
+                ResultSet resultSet = statement.executeQuery();
+
+                if (resultSet.next()) {
+                    // Username exists, now check password
+                    String storedHash = resultSet.getString("password");
+
+                    BCrypt.Result result = BCrypt.verifyer().verify(passwordValue.toCharArray(), storedHash);
+                    if (result.verified) {
+                        System.out.println("Login successful!");
+                        try {
+                            window.close();
+                            Stage catStage = new Stage();
+                            new Categories().start(catStage);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    } else {
+                        passBox.setStyle("-fx-border-color: red;");
+                        passLabel.setStyle("-fx-text-fill: red;");
+                        passLabel.setText("Incorrect password"); // Set the label to indicate incorrect password
+                        shake(passInput);
+                        valid = false;
+                    }
+                } else {
+                    nameInput.setStyle("-fx-border-color: red;");
+                    nameLabel.setStyle("-fx-text-fill: red;");
+                    nameLabel.setText("Username not found"); // Set the label to indicate username not found
+                    shake(nameInput);
+                    valid = false;
+                }
+
+                resultSet.close();
+                statement.close();
+                connection.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     private void shake(TextField textField) {

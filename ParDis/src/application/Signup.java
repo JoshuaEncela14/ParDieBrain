@@ -18,10 +18,13 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import at.favre.lib.crypto.bcrypt.BCrypt;
 
 public class Signup extends Application {
 
@@ -33,10 +36,10 @@ public class Signup extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-    	
+
         ImageView eyeImageView = new ImageView(new Image("Blind.png"));
         ImageView eyeImageView2 = new ImageView(new Image("Blind.png"));
-        
+
         String url = "jdbc:mysql://localhost:3306/login";
         String username = "root";
         String password = "";
@@ -102,83 +105,31 @@ public class Signup extends Application {
 
         // Sign Up Action
         signUpButton.setOnAction(e -> {
-            String name = nameInput.getText();
-            String passwordValue = passInput.getText();
-            String confirmValue = confirmInput.getText();
-            
-            boolean valid = true;
+            signUp(nameInput, passInput, confirmInput, nameLabel, passLabel, confirmLabel, passBox, confirmPassBox, url, username, password);
+        });
 
-            if (name.isEmpty()) {
-                nameInput.setStyle("-fx-border-color: red;");
-                nameLabel.setStyle("-fx-text-fill: red;");
-                shake(nameInput);
-                valid = false;
+        // Enter key triggers sign up
+        nameInput.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                signUp(nameInput, passInput, confirmInput, nameLabel, passLabel, confirmLabel, passBox, confirmPassBox, url, username, password);
             }
-
-            else if (passwordValue.isEmpty()) {
-                passBox.setStyle("-fx-border-color: red;");
-                passLabel.setStyle("-fx-text-fill: red;");
-                shake(passInput);
-                valid = false;
+        });
+        
+        nameInput.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                signUp(nameInput, passInput, confirmInput, nameLabel, passLabel, confirmLabel, passBox, confirmPassBox, url, username, password);
             }
+        });
 
-            else if (confirmValue.isEmpty()) {
-                confirmPassBox.setStyle("-fx-border-color: red;");
-                confirmLabel.setStyle("-fx-text-fill: red;");
-                shake(confirmInput);
-                valid = false;
+        passInput.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                signUp(nameInput, passInput, confirmInput, nameLabel, passLabel, confirmLabel, passBox, confirmPassBox, url, username, password);
             }
+        });
 
-            else if (!passwordValue.equals(confirmValue)) {
-                passBox.setStyle("-fx-border-color: red;");
-                passLabel.setStyle("-fx-text-fill: red;");
-                shake(passInput);
-                confirmPassBox.setStyle("-fx-border-color: red;");
-                confirmLabel.setStyle("-fx-text-fill: red;");
-                shake(confirmInput);
-                valid = false;
-            }
-
-            if (valid) {
-                try {
-                    Connection connection = DriverManager.getConnection(url, username, password);
-                    String checkSql = "SELECT * FROM `create` WHERE name = ?";
-                    PreparedStatement checkStatement = connection.prepareStatement(checkSql);
-                    checkStatement.setString(1, name);
-                    ResultSet resultSet = checkStatement.executeQuery();
-
-                    if (resultSet.next()) {
-                        nameInput.setStyle("-fx-border-color: red;");
-                        nameLabel.setStyle("-fx-text-fill: red;");
-                        shake(nameInput);
-                    } else {
-                        String insertSql = "INSERT INTO `create` (name, password) VALUES (?, ?)";
-                        PreparedStatement insertStatement = connection.prepareStatement(insertSql);
-                        insertStatement.setString(1, name);
-                        insertStatement.setString(2, passwordValue);
-                        int rowsInserted = insertStatement.executeUpdate();
-
-                        if (rowsInserted > 0) {
-                      	  System.out.println("Account Created");
-                      	  try {
-                                window.close();
-                                Stage loginStage = new Stage();
-                                new Login().start(loginStage);
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                            }
-                        }
-
-                        insertStatement.close();
-                    }
-
-                    resultSet.close();
-                    checkStatement.close();
-                    connection.close();
-                } catch (SQLException ex) {
-                    System.out.println("Connection failed or error in SQL statement!");
-                    ex.printStackTrace();
-                }
+        confirmInput.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                signUp(nameInput, passInput, confirmInput, nameLabel, passLabel, confirmLabel, passBox, confirmPassBox, url, username, password);
             }
         });
 
@@ -243,12 +194,93 @@ public class Signup extends Application {
         window.show();
     }
 
-    private void shake(TextField textField) {
-        TranslateTransition tt = new TranslateTransition(Duration.millis(50), textField);
-        tt.setFromX(0);
-        tt.setByX(10);
-        tt.setCycleCount(6);
-        tt.setAutoReverse(true);
-        tt.play();
-    }
+    private void signUp(TextField nameInput, PasswordField passInput, PasswordField confirmInput,
+                        Label nameLabel, Label passLabel, Label confirmLabel,
+                        HBox passBox, HBox confirmPassBox, String url, String username, String password) {
+        String name = nameInput.getText();
+        String passwordValue = passInput.getText();
+        String confirmValue = confirmInput.getText();
+
+        boolean valid = true;
+
+        if (name.isEmpty()) {
+            nameInput.setStyle("-fx-border-color: red;");
+            nameLabel.setStyle("-fx-text-fill: red;");
+            shake(nameInput);
+            valid = false;
+        } else if (passwordValue.isEmpty()) {
+            passBox.setStyle("-fx-border-color: red;");
+            passLabel.setStyle("-fx-text-fill: red;");
+            shake(passInput);
+            valid = false;
+        } else if (confirmValue.isEmpty()) {
+            confirmPassBox.setStyle("-fx-border-color: red;");
+            confirmLabel.setStyle("-fx-text-fill: red;");
+            shake(confirmInput);
+            valid = false;
+        } else if (!passwordValue.equals(confirmValue)) {
+            passBox.setStyle("-fx-border-color: red;");
+            passLabel.setStyle("-fx-text-fill: red;");
+            shake(passInput);
+            confirmPassBox.setStyle("-fx-border-color: red;");
+            confirmLabel.setStyle("-fx-text-fill: red;");
+            confirmLabel.setText("Password do not match");
+            shake(confirmInput);
+            valid = false;
+        }
+
+        if (valid) {
+            try {
+                String hashedPassword = BCrypt.withDefaults().hashToString(12, passwordValue.toCharArray());
+                Connection connection = DriverManager.getConnection(url, username, password);
+                String checkSql = "SELECT * FROM `create` WHERE name = ?";
+                PreparedStatement checkStatement = connection.prepareStatement(checkSql);
+                checkStatement.setString(1, name);
+                ResultSet resultSet = checkStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    nameInput.setStyle("-fx-border-color: red;");
+                    nameLabel.setStyle("-fx-text-fill: red;");
+                    nameLabel.setText("Username taken");
+                    shake(nameInput);
+                } else {
+                    String insertSql = "INSERT INTO `create` (name, password) VALUES (?, ?)";
+                    PreparedStatement insertStatement = connection.prepareStatement(insertSql);
+                    insertStatement.setString(1, name);
+                    insertStatement.setString(2, hashedPassword);
+                        int rowsInserted = insertStatement.executeUpdate();
+
+                        if (rowsInserted > 0) {
+                            System.out.println("Account Created");
+                            try {
+                                window.close();
+                                Stage loginStage = new Stage();
+                                new Login().start(loginStage);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+
+                        insertStatement.close();
+                    }
+
+                    resultSet.close();
+                    checkStatement.close();
+                    connection.close();
+                } catch (SQLException ex) {
+                    System.out.println("Connection failed or error in SQL statement!");
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        private void shake(TextField textField) {
+            TranslateTransition tt = new TranslateTransition(Duration.millis(50), textField);
+            tt.setFromX(0);
+            tt.setByX(10);
+            tt.setCycleCount(6);
+            tt.setAutoReverse(true);
+            tt.play();
+        }
+        
 }
