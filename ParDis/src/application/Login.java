@@ -68,7 +68,7 @@ public class Login extends Application {
         passInput.setPromptText("Enter Password");
         passInput.setPrefHeight(35);
         passInput.setPrefWidth(500);
-        passInput.getStyleClass().add("password-field ");
+        passInput.getStyleClass().add("password-field");
 
         // ImageView for toggling password visibility
         ImageView eyeImageView = new ImageView(new Image("Blind.png"));

@@ -31,6 +31,10 @@ public class Signup extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+    	
+        ImageView eyeImageView = new ImageView(new Image("Blind.png"));
+        ImageView eyeImageView2 = new ImageView(new Image("Blind.png"));
+        
         String url = "jdbc:mysql://localhost:3306/login";
         String username = "root";
         String password = "";
@@ -58,6 +62,7 @@ public class Signup extends Application {
         GridPane.setConstraints(nameInput, 0, 5);
         nameInput.setPrefHeight(35);
         nameInput.setPrefWidth(250);
+        nameInput.getStyleClass().add("name-field-container");
 
         // Password Label
         Label passLabel = new Label("Enter Password: ");
@@ -67,7 +72,8 @@ public class Signup extends Application {
         passInput.setPromptText("Enter Password");
         GridPane.setConstraints(passInput, 0, 8);
         passInput.setPrefHeight(35);
-        passInput.setPrefWidth(250);
+        passInput.setPrefWidth(500);
+        passInput.getStyleClass().add("password-field");
 
         // Confirm Password Label
         Label confirmLabel = new Label("Confirm Password: ");
@@ -77,7 +83,21 @@ public class Signup extends Application {
         confirmInput.setPromptText("Confirm Password");
         GridPane.setConstraints(confirmInput, 0, 11);
         confirmInput.setPrefHeight(35);
-        confirmInput.setPrefWidth(250);
+        confirmInput.setPrefWidth(500);
+        confirmInput.getStyleClass().add("password-field");
+        
+     // HBox to contain PasswordField and ImageView
+        HBox passBox = new HBox();
+        passBox.setAlignment(Pos.CENTER_LEFT);
+        passBox.getChildren().addAll(passInput, eyeImageView);
+        GridPane.setConstraints(passBox, 0, 8);
+        passBox.getStyleClass().add("password-field-container");
+        
+        HBox confirmPassBox = new HBox();
+        confirmPassBox.setAlignment(Pos.CENTER_LEFT);
+        confirmPassBox.getChildren().addAll(confirmInput, eyeImageView2);
+        GridPane.setConstraints(confirmPassBox, 0, 11);
+        confirmPassBox.getStyleClass().add("password-field-container");
 
         Button signUpButton = new Button("SIGN-UP");
         signUpButton.setPrefWidth(250);
@@ -149,6 +169,30 @@ public class Signup extends Application {
         hboxlogin.getChildren().addAll(logLabel, logInLink);
         GridPane.setConstraints(hboxlogin, 0, 18);
 
+        nameInput.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+            	nameInput.getStyleClass().add("password-field-container-active");
+            } else {
+            	nameInput.getStyleClass().remove("password-field-container-active");
+            }
+        });
+        
+        passInput.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+            	passBox.getStyleClass().add("password-field-container-active");
+            } else {
+            	passBox.getStyleClass().remove("password-field-container-active");
+            }
+        });
+        
+        confirmInput.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+            	confirmPassBox.getStyleClass().add("password-field-container-active");
+            } else {
+            	confirmPassBox.getStyleClass().remove("password-field-container-active");
+            }
+        });
+        
         logInLink.setOnAction(e -> {
             try {
                 window.close();
@@ -159,7 +203,7 @@ public class Signup extends Application {
             }
         });
 
-        grid.getChildren().addAll(nameLabel, nameInput, passLabel, passInput, confirmLabel, confirmInput, hboxsignup, hboxlogin);
+        grid.getChildren().addAll(nameLabel, nameInput, passLabel, passBox, confirmLabel, confirmPassBox, hboxsignup, hboxlogin);
 
         Scene scene = new Scene(grid, 960, 520);
         scene.getStylesheets().add("loginStyle.css");
