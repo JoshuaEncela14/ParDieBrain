@@ -143,6 +143,16 @@ public class Results extends Application {
         Button homeButton = createButton(home, "Result-buttons", e -> primaryStage.close());
         Button retakeButton = createButton(retake, "Result-buttons", e -> primaryStage.close());
         Button advanceButton = createButton(advance, "Result-buttons", e -> primaryStage.close());
+        
+        homeButton.setOnAction(e -> {
+            try {
+            	primaryStage.close();
+                Stage loginStage = new Stage();
+                new Login().start(loginStage);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
 
         HBox resultButtons = new HBox(-20);
         resultButtons.setAlignment(Pos.CENTER);

@@ -63,6 +63,17 @@ public class Categories extends Application {
         stageOne.setPrefWidth(140);
         stageOne.setPrefHeight(75);
         stageOne.getStyleClass().add("button-with-background"); // Apply CSS class correctly
+        
+        stageOne.setOnAction(e -> {
+            try {
+                window.close();
+
+                Stage QuestionStage = new Stage();
+                new Questions().start(QuestionStage);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
 
         Button stageTwo = new Button("Stage 2");
         stageTwo.setPrefWidth(140);
