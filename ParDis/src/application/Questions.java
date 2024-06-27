@@ -25,7 +25,13 @@ public class Questions extends Application {
     private int currentNumber = 1;
     private Timeline timeline;
 
-    private String[] questions = {""};
+    private String[] questions = {"Which number is a prime number?",
+    							  "If you subtract 9 from 15, what do you get?",
+    							  "What is the sum of 7 and 5?",
+    							  "Which shape has four equal sides?",
+    							  "If you have 10 apples and you give away 3, how many apples do you have left?"
+    							  
+    };
     private String[] answerTexts = {"6", "7", "8", "9"};
     private String[] imageFiles = {"A.png", "B.png", "C.png", "D.png"};
 
@@ -196,7 +202,12 @@ public class Questions extends Application {
 
 
     private HBox createQuestionContainer() {
-        Label questionLabel = new Label("If you have 10 apples and you give away 3, how many apples do you have left?");
+        Label questionLabel = new Label();
+        
+    	for (int i=0; i<questions.length; i++) {
+    		questionLabel.setText(questions[i]);
+    	}
+
         questionLabel.getStyleClass().add("label-question-label");
         questionLabel.setLineSpacing(10);
 
