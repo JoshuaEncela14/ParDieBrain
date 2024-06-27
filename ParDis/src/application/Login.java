@@ -193,7 +193,6 @@ public class Login extends Application {
 
         Scene scene = new Scene(grid, 960, 520);
         scene.getStylesheets().add("loginStyle.css");
-        // scene.getStylesheets().add("design.css");
         window.setScene(scene);
         window.show();
     }

@@ -87,6 +87,7 @@
 
 .password-field-container-active {
     -fx-border-color: blue; /* Change to desired active border color */
+    -fx-text-fill: black;
 }
 
 .password-field {
@@ -95,6 +96,11 @@
     -fx-padding: 5 0 5 0; /* Adjust padding to match the HBox padding */
     -fx-border-color: transparent;
     -fx-pref-height: 35;
+}
+
+-incorrect-input {
+	-fx-text-fill: red;
+	-fx-background-color: red;
 }
 
 .toggle-passowrd {
