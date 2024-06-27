@@ -208,6 +208,7 @@ public class Questions extends Application {
     		questionLabel.setText(questions[i]);
     	}
 
+
         questionLabel.getStyleClass().add("label-question-label");
         questionLabel.setLineSpacing(10);
 
