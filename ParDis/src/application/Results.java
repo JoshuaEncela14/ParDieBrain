@@ -6,7 +6,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -19,29 +18,34 @@ import javafx.stage.StageStyle;
 
 public class Results extends Application {
 
+    private Stage questionStage; // Reference to the Question stage
+
+    public Results(Stage questionStage) {
+        this.questionStage = questionStage;
+    }
+
     public static void main(String[] args) {
         launch(args);
     }
 
     @Override
     public void start(Stage primaryStage) {
-    	primaryStage.initStyle(StageStyle.TRANSPARENT);
+        primaryStage.initStyle(StageStyle.TRANSPARENT);
 
         // Creating main grid layout
         GridPane grid = createGridPane();
         grid.getStyleClass().add("result-parent-grid");
-        
+
         // Creating star images
         ImageView starGood = new ImageView(new Image("yeyStar.png"));
         ImageView star2Good = new ImageView(new Image("yeyStar.png"));
-        star2Good.setTranslateY(-30); 
+        star2Good.setTranslateY(-30);
         ImageView star3Good = new ImageView(new Image("yeyStar.png"));
 
         ImageView starBad = new ImageView(new Image("notYeyStar.png"));
         ImageView star2Bad = new ImageView(new Image("notYeyStar.png"));
-        star2Bad.setTranslateY(-30); 
+        star2Bad.setTranslateY(-30);
         ImageView star3Bad = new ImageView(new Image("notYeyStar.png"));
-        
 
         // Creating components
         Label stageLevel = createLabel("LEVEL 1", "analysis-labels");
@@ -84,7 +88,6 @@ public class Results extends Application {
         grid.setPadding(new Insets(10));
         grid.setVgap(10);
         grid.setHgap(10);
-//        grid.setGridLinesVisible(false); // grid view
         return grid;
     }
 
@@ -140,18 +143,25 @@ public class Results extends Application {
         ImageView retake = new ImageView(new Image("Retake.png"));
         ImageView advance = new ImageView(new Image("Advance.png"));
 
-        Button homeButton = createButton(home, "Result-buttons", e -> primaryStage.close());
-        Button retakeButton = createButton(retake, "Result-buttons", e -> primaryStage.close());
-        Button advanceButton = createButton(advance, "Result-buttons", e -> primaryStage.close());
-        
-        homeButton.setOnAction(e -> {
+        Button homeButton = createButton(home, "Result-buttons", e -> {
+           
+            
             try {
-            	primaryStage.close();
+            	 primaryStage.close();
+                 questionStage.close(); 
                 Stage loginStage = new Stage();
                 new Login().start(loginStage);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+        });
+        Button retakeButton = createButton(retake, "Result-buttons", e -> {
+            primaryStage.close();
+            questionStage.close();
+        });
+        Button advanceButton = createButton(advance, "Result-buttons", e -> {
+            primaryStage.close();
+            questionStage.close(); 
         });
 
         HBox resultButtons = new HBox(-20);
@@ -169,7 +179,7 @@ public class Results extends Application {
     }
 
     private ImageView rotateImage(ImageView imageView, double angle) {
-        Rotate rotate = new Rotate(angle, 0, 0); // Rotate angle in degrees, pivot point (0, 0)
+        Rotate rotate = new Rotate(angle, 0, 0); 
         imageView.getTransforms().add(rotate);
         return imageView;
     }

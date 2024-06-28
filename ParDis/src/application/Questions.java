@@ -13,10 +13,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Modality;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 public class Questions extends Application {
@@ -25,12 +22,12 @@ public class Questions extends Application {
     private int currentNumber = 1;
     private Timeline timeline;
 
-    private String[] questions = {"Which number is a prime number?",
-    							  "If you subtract 9 from 15, what do you get?",
-    							  "What is the sum of 7 and 5?",
-    							  "Which shape has four equal sides?",
-    							  "If you have 10 apples and you give away 3, how many apples do you have left?"
-    							  
+    private String[] questions = {
+            "Which number is a prime number?",
+            "If you subtract 9 from 15, what do you get?",
+            "What is the sum of 7 and 5?",
+            "Which shape has four equal sides?",
+            "If you have 10 apples and you give away 3, how many apples do you have left?"
     };
     private String[] answerTexts = {"6", "7", "8", "9"};
     private String[] imageFiles = {"A.png", "B.png", "C.png", "D.png"};
@@ -59,7 +56,6 @@ public class Questions extends Application {
 
     private GridPane createGridPane() {
         GridPane grid = new GridPane();
-//        grid.setGridLinesVisible(true); 
         grid.setHgap(10);
 
         // use full width
@@ -104,8 +100,7 @@ public class Questions extends Application {
             if (text.equals("Pause")) {
                 pauseTimer();
             } else if (text.equals("50:50")) {
-                // 50:50 lifeline logic 
-
+                // 50:50 lifeline logic
             }
         });
 
@@ -132,7 +127,7 @@ public class Questions extends Application {
 
     private void pauseTimer() {
         timeline.pause();
-        
+
         // Resume after 10 seconds
         Timeline resumeTimeline = new Timeline(
                 new KeyFrame(Duration.seconds(10), e -> timeline.play())
@@ -145,17 +140,15 @@ public class Questions extends Application {
         for (int i = 0; i < answerTexts.length; i++) {
             optionButtons[i] = createOptionButton(answerTexts[i], imageFiles[i]);
         }
-        
+
         optionButtons[0].setOnAction(e -> {
-        	
-            // Call the Result class directly when button is clicked
-            Results resultWindow = new Results();
+
+            Results resultWindow = new Results(window); 
             try {
-				resultWindow.start(new Stage());
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+                resultWindow.start(new Stage());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         });
 
         HBox optionOneThree = new HBox(125, optionButtons[0], optionButtons[2]);
@@ -185,6 +178,7 @@ public class Questions extends Application {
 
         Label answerLabel = new Label(answer);
         answerLabel.getStyleClass().add("label-question-answer");
+
         Pane imagePane = new Pane();
         imagePane.setStyle("-fx-background-image: url('" + imageFilename + "');" +
                 "-fx-background-size: 80% 80%;" +
@@ -202,12 +196,7 @@ public class Questions extends Application {
 
 
     private HBox createQuestionContainer() {
-        Label questionLabel = new Label();
-        
-    	for (int i=0; i<questions.length; i++) {
-    		questionLabel.setText(questions[i]);
-    	}
-
+        Label questionLabel = new Label(questions[0]); // Display the first question initially
 
         questionLabel.getStyleClass().add("label-question-label");
         questionLabel.setLineSpacing(10);
@@ -222,5 +211,5 @@ public class Questions extends Application {
 
         return questionContainer;
     }
-    
+
 }
