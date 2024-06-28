@@ -2,6 +2,7 @@ package application;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
+import javafx.animation.PauseTransition;
 import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.geometry.HPos;
@@ -19,7 +20,7 @@ import javafx.util.Duration;
 public class Questions extends Application {
 
     private Stage window;
-    private int currentNumber = 1;
+    private int currentNumber = 0;
     private Timeline timeline;
 
     private String[] questions = {
@@ -29,8 +30,20 @@ public class Questions extends Application {
             "Which shape has four equal sides?",
             "If you have 10 apples and you give away 3, how many apples do you have left?"
     };
-    private String[] answerTexts = {"6", "7", "8", "9"};
+    private String[][] answerTexts = {
+        {"6", "7", "8", "9"},
+        {"4", "6", "8", "7"},
+        {"11", "12", "13", "14"},
+        {"Rectangle", "Square", "Triangle", "Circle"},
+        {"6", "7", "8", "9"}
+    };
+
     private String[] imageFiles = {"A.png", "B.png", "C.png", "D.png"};
+    private String[] answers = {"7", "6", "12", "Square", "7"};
+
+    private Label questionLabel;
+    private Label currentQuestionLabel;
+    private Button[] optionButtons;
 
     public static void main(String[] args) {
         launch(args);
@@ -58,7 +71,6 @@ public class Questions extends Application {
         GridPane grid = new GridPane();
         grid.setHgap(10);
 
-        // use full width
         ColumnConstraints colConstraints = new ColumnConstraints();
         colConstraints.setPercentWidth(100);
         grid.getColumnConstraints().add(colConstraints);
@@ -74,10 +86,10 @@ public class Questions extends Application {
         lifelines.setAlignment(Pos.CENTER);
         HBox.setMargin(lifelines, new Insets(0, 0, 0, 10));
 
-        Label currentQuestion = new Label(currentNumber + " / 5");
-        currentQuestion.getStyleClass().add("label-question");
+        currentQuestionLabel = new Label((currentNumber + 1) + " / 5");
+        currentQuestionLabel.getStyleClass().add("label-question");
 
-        HBox questionTracking = new HBox(currentQuestion);
+        HBox questionTracking = new HBox(currentQuestionLabel);
         questionTracking.getStyleClass().add("hbox-question-tracking");
         questionTracking.setAlignment(Pos.CENTER);
         questionTracking.setSpacing(10);
@@ -128,7 +140,6 @@ public class Questions extends Application {
     private void pauseTimer() {
         timeline.pause();
 
-        // Resume after 10 seconds
         Timeline resumeTimeline = new Timeline(
                 new KeyFrame(Duration.seconds(10), e -> timeline.play())
         );
@@ -136,20 +147,53 @@ public class Questions extends Application {
     }
 
     private VBox createQuestionOptions() {
-        Button[] optionButtons = new Button[answerTexts.length];
-        for (int i = 0; i < answerTexts.length; i++) {
-            optionButtons[i] = createOptionButton(answerTexts[i], imageFiles[i]);
+        optionButtons = new Button[4];
+        for (int i = 0; i < optionButtons.length; i++) {
+            optionButtons[i] = createOptionButton(answerTexts[currentNumber][i], imageFiles[i]);
         }
 
-        optionButtons[0].setOnAction(e -> {
+        for (Button button : optionButtons) {
+            button.setOnAction(e -> {
+                Button clickedButton = (Button) e.getSource();
+                HBox optionContent = (HBox) clickedButton.getGraphic();
+                Label answerLabel = (Label) optionContent.getChildren().get(1);
 
-            Results resultWindow = new Results(window); 
-            try {
-                resultWindow.start(new Stage());
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
+                // Check if the answer is correct
+                if (answerLabel.getText().equals(answers[currentNumber])) {
+                    clickedButton.setStyle("-fx-background-color: green");
+                } else {
+                    clickedButton.setStyle("-fx-background-color: red");
+                }
+
+                // Disable all buttons to prevent further interaction
+                for (Button btn : optionButtons) {
+                    btn.setDisable(true);
+                }
+                reseTimer();
+                // Start a delay to move to the next question
+                PauseTransition pause = new PauseTransition(Duration.seconds(1));
+                pause.setOnFinished(ev -> {
+                    currentNumber++;
+                    if (currentNumber < questions.length) {
+                        updateQuestion();
+                        // Reset button styles and enable them for the next question
+                        for (Button btn : optionButtons) {
+                            btn.setStyle(""); // Reset style
+                            btn.setDisable(false);
+                        }
+
+                    } else {
+                        Results resultWindow = new Results(window);
+                        try {
+                            resultWindow.start(new Stage());
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+                pause.play();
+            });
+        }
 
         HBox optionOneThree = new HBox(125, optionButtons[0], optionButtons[2]);
         optionOneThree.getStyleClass().add("hbox-question-optionAC");
@@ -194,9 +238,8 @@ public class Questions extends Application {
         return optionButton;
     }
 
-
     private HBox createQuestionContainer() {
-        Label questionLabel = new Label(questions[0]); // Display the first question initially
+        questionLabel = new Label(questions[currentNumber]); 
 
         questionLabel.getStyleClass().add("label-question-label");
         questionLabel.setLineSpacing(10);
@@ -211,5 +254,37 @@ public class Questions extends Application {
 
         return questionContainer;
     }
+    
+    private void updateQuestion() {
+        questionLabel.setText(questions[currentNumber]);
+        currentQuestionLabel.setText((currentNumber + 1) + " / 5");
 
+        for (int i = 0; i < optionButtons.length; i++) {
+            ((Label)((HBox)optionButtons[i].getGraphic()).getChildren().get(1)).setText(answerTexts[currentNumber][i]);
+            optionButtons[i].setStyle("	-fx-background-color: rgba(255, 255, 255, 0.7)"); 
+            optionButtons[i].setDisable(false); // Enable button
+            
+        }
+    }
+    
+    private void reseTimer() {
+    	 timeline.stop();
+    	    
+    	    // Reset timer bar width to initial state
+    	    for (KeyValue keyValue : timeline.getKeyFrames().get(1).getValues()) {
+    	        if (keyValue.getTarget() instanceof Rectangle) {
+    	            Rectangle timerBar = (Rectangle) keyValue.getTarget();
+    	            timerBar.setWidth(960); 
+    	            break; 
+    	        }
+    	    }
+
+    	    Timeline pauseTimeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+    	        // Restart timeline animation after pause
+    	        timeline.play();
+    	    }));
+    	    pauseTimeline.play();
+
+    }
+    
 }
